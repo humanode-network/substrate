@@ -20,6 +20,8 @@ In other words: Upgrading this pallet will not break pre-existing contracts.
 
 ### Added
 
+- Add new unstable version of `seal_call` that offers new features.
+
 - Replaced `seal_println` with `seal_debug_message` which allows output to an RPC client.
 [1](https://github.com/paritytech/substrate/pull/8773)
 
