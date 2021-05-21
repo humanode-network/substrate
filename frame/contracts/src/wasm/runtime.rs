@@ -686,7 +686,7 @@ where
 		let callee: <<E as Ext>::T as frame_system::Config>::AccountId =
 			self.read_sandbox_memory_as(callee_ptr, callee_len)?;
 		let value: BalanceOf<<E as Ext>::T> = self.read_sandbox_memory_as(value_ptr, value_len)?;
-		let input_data = if flags.contains(CallFlags::FORWARD_INPUT) {
+		let input_data = if flags.contains(CallFlags::CLONE_INPUT) {
 			self.input_data.as_ref().ok_or_else(|| Error::<E::T>::InputForwarded)?.clone()
 		} else if flags.contains(CallFlags::FORWARD_INPUT) {
 			self.input_data.take().ok_or_else(|| Error::<E::T>::InputForwarded)?

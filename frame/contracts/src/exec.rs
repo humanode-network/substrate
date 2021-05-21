@@ -1273,8 +1273,6 @@ where
 			false
 		}
 	}
-
-
 }
 
 fn deposit_event<T: Config>(
