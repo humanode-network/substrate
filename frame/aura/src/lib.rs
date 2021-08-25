@@ -111,7 +111,7 @@ pub mod pallet {
 	/// The current authority set.
 	#[pallet::storage]
 	#[pallet::getter(fn authorities)]
-	pub(super) type Authorities<T: Config> = StorageValue<_, Vec<T::AuthorityId>, ValueQuery>;
+	pub type Authorities<T: Config> = StorageValue<_, Vec<T::AuthorityId>, ValueQuery>;
 
 	/// The current slot of this block.
 	///
