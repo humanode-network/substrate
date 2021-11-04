@@ -274,7 +274,7 @@ impl<B: BlockT> StateBackend<HashFor<B>> for RefTrackingState<B> {
 	}
 
 	fn as_trie_backend(
-		&mut self,
+		&self,
 	) -> Option<&sp_state_machine::TrieBackend<Self::TrieBackendStorage, HashFor<B>>> {
 		self.state.as_trie_backend()
 	}
@@ -297,7 +297,7 @@ pub struct DatabaseSettings {
 	/// State pruning mode.
 	pub state_pruning: PruningMode,
 	/// Where to find the database.
-	pub source: DatabaseSettingsSrc,
+	pub source: DatabaseSource,
 	/// Block pruning mode.
 	pub keep_blocks: KeepBlocks,
 	/// Block body/Transaction storage scheme.
@@ -325,7 +325,17 @@ pub enum TransactionStorageMode {
 
 /// Where to find the database..
 #[derive(Debug, Clone)]
-pub enum DatabaseSettingsSrc {
+pub enum DatabaseSource {
+	/// Check given path, and see if there is an existing database there. If it's either `RocksDb`
+	/// or `ParityDb`, use it. If there is none, create a new instance of `ParityDb`.
+	Auto {
+		/// Path to the paritydb database.
+		paritydb_path: PathBuf,
+		/// Path to the rocksdb database.
+		rocksdb_path: PathBuf,
+		/// Cache size in MiB. Used only by `RocksDb` variant of `DatabaseSource`.
+		cache_size: usize,
+	},
 	/// Load a RocksDB database from a given path. Recommended for most uses.
 	RocksDb {
 		/// Path to the database.
@@ -344,27 +354,44 @@ pub enum DatabaseSettingsSrc {
 	Custom(Arc<dyn Database<DbHash>>),
 }
 
-impl DatabaseSettingsSrc {
-	/// Return dabase path for databases that are on the disk.
+impl DatabaseSource {
+	/// Return path for databases that are stored on disk.
 	pub fn path(&self) -> Option<&Path> {
 		match self {
-			DatabaseSettingsSrc::RocksDb { path, .. } => Some(path.as_path()),
-			DatabaseSettingsSrc::ParityDb { path, .. } => Some(path.as_path()),
-			DatabaseSettingsSrc::Custom(_) => None,
+			// as per https://github.com/paritytech/substrate/pull/9500#discussion_r684312550
+			//
+			// IIUC this is needed for polkadot to create its own dbs, so until it can use parity db
+			// I would think rocksdb, but later parity-db.
+			DatabaseSource::Auto { paritydb_path, .. } => Some(&paritydb_path),
+			DatabaseSource::RocksDb { path, .. } | DatabaseSource::ParityDb { path } => Some(&path),
+			DatabaseSource::Custom(..) => None,
 		}
 	}
-	/// Check if database supports internal ref counting for state data.
-	pub fn supports_ref_counting(&self) -> bool {
-		matches!(self, DatabaseSettingsSrc::ParityDb { .. })
+
+	/// Set path for databases that are stored on disk.
+	pub fn set_path(&mut self, p: &Path) -> bool {
+		match self {
+			DatabaseSource::Auto { ref mut paritydb_path, .. } => {
+				*paritydb_path = p.into();
+				true
+			},
+			DatabaseSource::RocksDb { ref mut path, .. } |
+			DatabaseSource::ParityDb { ref mut path } => {
+				*path = p.into();
+				true
+			},
+			DatabaseSource::Custom(..) => false,
+		}
 	}
 }
 
-impl std::fmt::Display for DatabaseSettingsSrc {
+impl std::fmt::Display for DatabaseSource {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		let name = match self {
-			DatabaseSettingsSrc::RocksDb { .. } => "RocksDb",
-			DatabaseSettingsSrc::ParityDb { .. } => "ParityDb",
-			DatabaseSettingsSrc::Custom(_) => "Custom",
+			DatabaseSource::Auto { .. } => "Auto",
+			DatabaseSource::RocksDb { .. } => "RocksDb",
+			DatabaseSource::ParityDb { .. } => "ParityDb",
+			DatabaseSource::Custom(_) => "Custom",
 		};
 		write!(f, "{}", name)
 	}
@@ -475,6 +502,11 @@ impl<Block: BlockT> BlockchainDb<Block> {
 		}
 	}
 
+	fn update_block_gap(&self, gap: Option<(NumberFor<Block>, NumberFor<Block>)>) {
+		let mut meta = self.meta.write();
+		meta.block_gap = gap;
+	}
+
 	// Get block changes trie root, if available.
 	fn changes_trie_root(&self, block: BlockId<Block>) -> ClientResult<Option<Block::Hash>> {
 		self.header(block).map(|header| {
@@ -511,6 +543,7 @@ impl<Block: BlockT> sc_client_api::blockchain::HeaderBackend<Block> for Blockcha
 			finalized_number: meta.finalized_number,
 			finalized_state: meta.finalized_state.clone(),
 			number_leaves: self.leaves.read().count(),
+			block_gap: meta.block_gap,
 		}
 	}
 
@@ -1043,21 +1076,22 @@ impl<T: Clone> FrozenForDuration<T> {
 		F: FnOnce() -> T,
 	{
 		let mut lock = self.value.lock();
-		if lock.at.elapsed() > self.duration || lock.value.is_none() {
+		let now = std::time::Instant::now();
+		if now.saturating_duration_since(lock.at) > self.duration || lock.value.is_none() {
 			let new_value = f();
-			lock.at = std::time::Instant::now();
+			lock.at = now;
 			lock.value = Some(new_value.clone());
 			new_value
 		} else {
-			lock.value.as_ref().expect("checked with lock above").clone()
+			lock.value.as_ref().expect("Checked with in branch above; qed").clone()
 		}
 	}
 }
 
 /// Disk backend.
 ///
-/// Disk backend keeps data in a key-value store. In archive mode, trie nodes are kept from all blocks.
-/// Otherwise, trie nodes are kept only from some recent blocks.
+/// Disk backend keeps data in a key-value store. In archive mode, trie nodes are kept from all
+/// blocks. Otherwise, trie nodes are kept only from some recent blocks.
 pub struct Backend<Block: BlockT> {
 	storage: Arc<StorageDb<Block>>,
 	offchain_storage: offchain::LocalStorage,
@@ -1106,7 +1140,7 @@ impl<Block: BlockT> Backend<Block> {
 			state_cache_size: 16777216,
 			state_cache_child_ratio: Some((50, 100)),
 			state_pruning: PruningMode::keep_blocks(keep_blocks),
-			source: DatabaseSettingsSrc::Custom(db),
+			source: DatabaseSource::Custom(db),
 			keep_blocks: KeepBlocks::Some(keep_blocks),
 			transaction_storage,
 		};
@@ -1125,15 +1159,12 @@ impl<Block: BlockT> Backend<Block> {
 		let map_e = |e: sc_state_db::Error<io::Error>| sp_blockchain::Error::from_state_db(e);
 		let state_db: StateDb<_, _> = StateDb::new(
 			config.state_pruning.clone(),
-			!config.source.supports_ref_counting(),
+			!db.supports_ref_counting(),
 			&StateMetaDb(&*db),
 		)
 		.map_err(map_e)?;
-		let storage_db = StorageDb {
-			db: db.clone(),
-			state_db,
-			prefix_keys: !config.source.supports_ref_counting(),
-		};
+		let storage_db =
+			StorageDb { db: db.clone(), state_db, prefix_keys: !db.supports_ref_counting() };
 		let offchain_storage = offchain::LocalStorage::new(db.clone());
 		let changes_tries_storage = DbChangesTrieStorage::new(
 			db,
@@ -1364,9 +1395,10 @@ impl<Block: BlockT> Backend<Block> {
 		operation.apply_offchain(&mut transaction);
 
 		let mut meta_updates = Vec::with_capacity(operation.finalized_blocks.len());
-		let mut last_finalized_hash = self.blockchain.meta.read().finalized_hash;
-		let mut last_finalized_num = self.blockchain.meta.read().finalized_number;
-		let best_num = self.blockchain.meta.read().best_number;
+		let (best_num, mut last_finalized_hash, mut last_finalized_num, mut block_gap) = {
+			let meta = self.blockchain.meta.read();
+			(meta.best_number, meta.finalized_hash, meta.finalized_number, meta.block_gap.clone())
+		};
 
 		let mut changes_trie_cache_ops = None;
 		for (block, justification) in operation.finalized_blocks {
@@ -1451,8 +1483,9 @@ impl<Block: BlockT> Backend<Block> {
 				if operation.commit_state {
 					transaction.set_from_vec(columns::META, meta_keys::FINALIZED_STATE, lookup_key);
 				} else {
-					// When we don't want to commit the genesis state, we still preserve it in memory
-					// to bootstrap consensus. It is queried for an initial list of authorities, etc.
+					// When we don't want to commit the genesis state, we still preserve it in
+					// memory to bootstrap consensus. It is queried for an initial list of
+					// authorities, etc.
 					*self.genesis_state.write() = Some(Arc::new(DbGenesisStorage::new(
 						pending_block.header.state_root().clone(),
 						operation.db_updates.clone(),
@@ -1614,6 +1647,41 @@ impl<Block: BlockT> Backend<Block> {
 						children,
 					);
 				}
+
+				if let Some((mut start, end)) = block_gap {
+					if number == start {
+						start += One::one();
+						utils::insert_number_to_key_mapping(
+							&mut transaction,
+							columns::KEY_LOOKUP,
+							number,
+							hash,
+						)?;
+					}
+					if start > end {
+						transaction.remove(columns::META, meta_keys::BLOCK_GAP);
+						block_gap = None;
+						debug!(target: "db", "Removed block gap.");
+					} else {
+						block_gap = Some((start, end));
+						debug!(target: "db", "Update block gap. {:?}", block_gap);
+						transaction.set(
+							columns::META,
+							meta_keys::BLOCK_GAP,
+							&(start, end).encode(),
+						);
+					}
+				} else if number > best_num + One::one() &&
+					number > One::one() && self
+					.blockchain
+					.header(BlockId::hash(parent_hash))?
+					.is_none()
+				{
+					let gap = (best_num + One::one(), number - One::one());
+					transaction.set(columns::META, meta_keys::BLOCK_GAP, &gap.encode());
+					block_gap = Some(gap);
+					debug!(target: "db", "Detected block gap {:?}", block_gap);
+				}
 			}
 
 			meta_updates.push(MetaUpdate {
@@ -1691,6 +1759,7 @@ impl<Block: BlockT> Backend<Block> {
 		for m in meta_updates {
 			self.blockchain.update_meta(m);
 		}
+		self.blockchain.update_block_gap(block_gap);
 
 		Ok(())
 	}
@@ -2516,7 +2585,7 @@ pub(crate) mod tests {
 				state_cache_size: 16777216,
 				state_cache_child_ratio: Some((50, 100)),
 				state_pruning: PruningMode::keep_blocks(1),
-				source: DatabaseSettingsSrc::Custom(backing),
+				source: DatabaseSource::Custom(backing),
 				keep_blocks: KeepBlocks::All,
 				transaction_storage: TransactionStorageMode::BlockBody,
 			},
@@ -3395,7 +3464,8 @@ pub(crate) mod tests {
 		let block5 = insert_header(&backend, 5, block4, None, Default::default());
 		assert_eq!(backend.blockchain().info().best_hash, block5);
 
-		// Insert 1 as best again. This should fail because canonicalization_delay == 3 and best == 5
+		// Insert 1 as best again. This should fail because canonicalization_delay == 3 and best ==
+		// 5
 		let header = Header {
 			number: 1,
 			parent_hash: block0,

@@ -41,13 +41,12 @@
 
 mod worker;
 
-pub use crate::worker::{MiningBuild, MiningMetadata, MiningWorker};
+pub use crate::worker::{MiningBuild, MiningHandle, MiningMetadata};
 
 use crate::worker::UntilImportedOrTimeout;
 use codec::{Decode, Encode};
 use futures::{Future, StreamExt};
 use log::*;
-use parking_lot::Mutex;
 use prometheus_endpoint::Registry;
 use sc_client_api::{self, backend::AuxStore, BlockOf, BlockchainEvents};
 use sc_consensus::{
@@ -525,7 +524,7 @@ pub fn start_mining_worker<Block, C, S, Algorithm, E, SO, L, CIDP, CAW>(
 	build_time: Duration,
 	can_author_with: CAW,
 ) -> (
-	Arc<Mutex<MiningWorker<Block, Algorithm, C, L, <E::Proposer as Proposer<Block>>::Proof>>>,
+	MiningHandle<Block, Algorithm, C, L, <E::Proposer as Proposer<Block>>::Proof>,
 	impl Future<Output = ()>,
 )
 where
@@ -543,12 +542,7 @@ where
 	CAW: CanAuthorWith<Block> + Clone + Send + 'static,
 {
 	let mut timer = UntilImportedOrTimeout::new(client.import_notification_stream(), timeout);
-	let worker = Arc::new(Mutex::new(MiningWorker {
-		build: None,
-		algorithm: algorithm.clone(),
-		block_import,
-		justification_sync_link,
-	}));
+	let worker = MiningHandle::new(algorithm.clone(), block_import, justification_sync_link);
 	let worker_ret = worker.clone();
 
 	let task = async move {
@@ -559,8 +553,8 @@ where
 
 			if sync_oracle.is_major_syncing() {
 				debug!(target: "pow", "Skipping proposal due to sync.");
-				worker.lock().on_major_syncing();
-				return
+				worker.on_major_syncing();
+				continue
 			}
 
 			let best_header = match select_chain.best_chain().await {
@@ -572,7 +566,7 @@ where
 						 Select best chain error: {:?}",
 						err
 					);
-					return
+					continue
 				},
 			};
 			let best_hash = best_header.hash();
@@ -584,15 +578,15 @@ where
 					 Probably a node update is required!",
 					err,
 				);
-				return
+				continue
 			}
 
-			if worker.lock().best_hash() == Some(best_hash) {
-				return
+			if worker.best_hash() == Some(best_hash) {
+				continue
 			}
 
-			// The worker is locked for the duration of the whole proposing period. Within this period,
-			// the mining target is outdated and useless anyway.
+			// The worker is locked for the duration of the whole proposing period. Within this
+			// period, the mining target is outdated and useless anyway.
 
 			let difficulty = match algorithm.difficulty(best_hash) {
 				Ok(x) => x,
@@ -603,7 +597,7 @@ where
 						 Fetch difficulty failed: {:?}",
 						err,
 					);
-					return
+					continue
 				},
 			};
 
@@ -619,7 +613,7 @@ where
 						 Creating inherent data providers failed: {:?}",
 						err,
 					);
-					return
+					continue
 				},
 			};
 
@@ -632,7 +626,7 @@ where
 						 Creating inherent data failed: {:?}",
 						e,
 					);
-					return
+					continue
 				},
 			};
 
@@ -652,7 +646,7 @@ where
 						 Creating proposer failed: {:?}",
 						err,
 					);
-					return
+					continue
 				},
 			};
 
@@ -668,7 +662,7 @@ where
 						 Creating proposal failed: {:?}",
 						err,
 					);
-					return
+					continue
 				},
 			};
 
@@ -682,7 +676,7 @@ where
 				proposal,
 			};
 
-			worker.lock().on_build(build);
+			worker.on_build(build);
 		}
 	};
 

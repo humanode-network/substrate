@@ -20,7 +20,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::Encode;
-use frame_benchmarking::{benchmarks, impl_benchmark_test_suite, whitelisted_caller};
+use frame_benchmarking::{benchmarks, whitelisted_caller};
 use frame_support::{storage, traits::Get, weights::DispatchClass};
 use frame_system::{Call, DigestItemOf, Pallet as System, RawOrigin};
 use sp_core::{storage::well_known_keys, ChangesTrieConfiguration};
@@ -79,6 +79,7 @@ benchmarks! {
 		assert_eq!(System::<T>::digest().logs.len(), (d + 1) as usize)
 	}
 
+	#[skip_meta]
 	set_storage {
 		let i in 1 .. 1000;
 
@@ -95,6 +96,7 @@ benchmarks! {
 		assert_eq!(value, last_hash.as_ref().to_vec());
 	}
 
+	#[skip_meta]
 	kill_storage {
 		let i in 1 .. 1000;
 
@@ -116,6 +118,7 @@ benchmarks! {
 		assert_eq!(storage::unhashed::get_raw(last_hash.as_ref()), None);
 	}
 
+	#[skip_meta]
 	kill_prefix {
 		let p in 1 .. 1000;
 
@@ -137,6 +140,6 @@ benchmarks! {
 	verify {
 		assert_eq!(storage::unhashed::get_raw(&last_key), None);
 	}
-}
 
-impl_benchmark_test_suite!(Pallet, crate::mock::new_test_ext(), crate::mock::Test);
+	impl_benchmark_test_suite!(Pallet, crate::mock::new_test_ext(), crate::mock::Test);
+}

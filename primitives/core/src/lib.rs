@@ -33,6 +33,7 @@ macro_rules! map {
 
 #[doc(hidden)]
 pub use codec::{Decode, Encode};
+use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 pub use serde;
 #[cfg(feature = "std")]
@@ -117,14 +118,13 @@ impl ExecutionContext {
 		use ExecutionContext::*;
 
 		match self {
-			Importing | Syncing | BlockConstruction => offchain::Capabilities::none(),
-			// Enable keystore, transaction pool and Offchain DB reads by default for offchain calls.
-			OffchainCall(None) => [
-				offchain::Capability::Keystore,
-				offchain::Capability::OffchainDbRead,
-				offchain::Capability::TransactionPool,
-			][..]
-				.into(),
+			Importing | Syncing | BlockConstruction => offchain::Capabilities::empty(),
+			// Enable keystore, transaction pool and Offchain DB reads by default for offchain
+			// calls.
+			OffchainCall(None) =>
+				offchain::Capabilities::KEYSTORE |
+					offchain::Capabilities::OFFCHAIN_DB_READ |
+					offchain::Capabilities::TRANSACTION_POOL,
 			OffchainCall(Some((_, capabilities))) => *capabilities,
 		}
 	}
@@ -190,7 +190,17 @@ impl sp_std::ops::Deref for OpaqueMetadata {
 
 /// Simple blob to hold a `PeerId` without committing to its format.
 #[derive(
-	Default, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug, PassByInner,
+	Default,
+	Clone,
+	Eq,
+	PartialEq,
+	Ord,
+	PartialOrd,
+	Encode,
+	Decode,
+	RuntimeDebug,
+	PassByInner,
+	TypeInfo,
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct OpaquePeerId(pub Vec<u8>);
@@ -413,7 +423,7 @@ pub fn to_substrate_wasm_fn_return_value(value: &impl Encode) -> u64 {
 
 /// The void type - it cannot exist.
 // Oh rust, you crack me up...
-#[derive(Clone, Decode, Encode, Eq, PartialEq, RuntimeDebug)]
+#[derive(Clone, Decode, Encode, Eq, PartialEq, RuntimeDebug, TypeInfo)]
 pub enum Void {}
 
 /// Macro for creating `Maybe*` marker traits.

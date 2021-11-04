@@ -32,9 +32,9 @@
 //!   an alternative signed origin. Each account has 2 * 2**16 possible "pseudonyms" (alternative
 //!   account IDs) and these can be stacked. This can be useful as a key management tool, where you
 //!   need multiple distinct accounts (e.g. as controllers for many staking accounts), but where
-//!   it's perfectly fine to have each of them controlled by the same underlying keypair.
-//!   Derivative accounts are, for the purposes of proxy filtering considered exactly the same as
-//!   the origin and are thus hampered with the origin's filters.
+//!   it's perfectly fine to have each of them controlled by the same underlying keypair. Derivative
+//!   accounts are, for the purposes of proxy filtering considered exactly the same as the origin
+//!   and are thus hampered with the origin's filters.
 //!
 //! Since proxy filters are respected in all dispatches of this pallet, it should never need to be
 //! filtered by any proxy.
@@ -112,13 +112,52 @@ pub mod pallet {
 		ItemCompleted,
 	}
 
+	// Align the call size to 1KB. As we are currently compiling the runtime for native/wasm
+	// the `size_of` of the `Call` can be different. To ensure that this don't leads to
+	// mismatches between native/wasm or to different metadata for the same runtime, we
+	// algin the call size. The value is choosen big enough to hopefully never reach it.
+	const CALL_ALIGN: u32 = 1024;
+
+	#[pallet::extra_constants]
+	impl<T: Config> Pallet<T> {
+		/// The limit on the number of batched calls.
+		fn batched_calls_limit() -> u32 {
+			let allocator_limit = sp_core::MAX_POSSIBLE_ALLOCATION;
+			let call_size = ((sp_std::mem::size_of::<<T as Config>::Call>() as u32 + CALL_ALIGN -
+				1) / CALL_ALIGN) * CALL_ALIGN;
+			// The margin to take into account vec doubling capacity.
+			let margin_factor = 3;
+
+			allocator_limit / margin_factor / call_size
+		}
+	}
+
+	#[pallet::hooks]
+	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+		fn integrity_test() {
+			// If you hit this error, you need to try to `Box` big dispatchable parameters.
+			assert!(
+				sp_std::mem::size_of::<<T as Config>::Call>() as u32 <= CALL_ALIGN,
+				"Call enum size should be smaller than {} bytes.",
+				CALL_ALIGN,
+			);
+		}
+	}
+
+	#[pallet::error]
+	pub enum Error<T> {
+		/// Too many calls batched.
+		TooManyCalls,
+	}
+
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		/// Send a batch of dispatch calls.
 		///
 		/// May be called from any origin.
 		///
-		/// - `calls`: The calls to be dispatched from the same origin.
+		/// - `calls`: The calls to be dispatched from the same origin. The number of call must not
+		///   exceed the constant: `batched_calls_limit` (available in constant metadata).
 		///
 		/// If origin is root then call are dispatch without checking origin filter. (This includes
 		/// bypassing `frame_system::Config::BaseCallFilter`).
@@ -156,6 +195,8 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let is_root = ensure_root(origin.clone()).is_ok();
 			let calls_len = calls.len();
+			ensure!(calls_len <= Self::batched_calls_limit() as usize, Error::<T>::TooManyCalls);
+
 			// Track the actual weight of each of the batch calls.
 			let mut weight: Weight = 0;
 			for (index, call) in calls.into_iter().enumerate() {
@@ -234,7 +275,8 @@ pub mod pallet {
 		///
 		/// May be called from any origin.
 		///
-		/// - `calls`: The calls to be dispatched from the same origin.
+		/// - `calls`: The calls to be dispatched from the same origin. The number of call must not
+		///   exceed the constant: `batched_calls_limit` (available in constant metadata).
 		///
 		/// If origin is root then call are dispatch without checking origin filter. (This includes
 		/// bypassing `frame_system::Config::BaseCallFilter`).
@@ -267,6 +309,8 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let is_root = ensure_root(origin.clone()).is_ok();
 			let calls_len = calls.len();
+			ensure!(calls_len <= Self::batched_calls_limit() as usize, Error::<T>::TooManyCalls);
+
 			// Track the actual weight of each of the batch calls.
 			let mut weight: Weight = 0;
 			for (index, call) in calls.into_iter().enumerate() {
@@ -279,7 +323,7 @@ pub mod pallet {
 					// Don't allow users to nest `batch_all` calls.
 					filtered_origin.add_filter(move |c: &<T as frame_system::Config>::Call| {
 						let c = <T as Config>::Call::from_ref(c);
-						!matches!(c.is_sub_type(), Some(Call::batch_all(_)))
+						!matches!(c.is_sub_type(), Some(Call::batch_all { .. }))
 					});
 					call.dispatch(filtered_origin)
 				};

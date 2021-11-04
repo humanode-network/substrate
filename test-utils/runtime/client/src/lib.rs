@@ -37,7 +37,7 @@ use sc_client_api::light::{
 use sp_core::{
 	sr25519,
 	storage::{ChildInfo, Storage, StorageChild},
-	ChangesTrieConfiguration,
+	ChangesTrieConfiguration, Pair,
 };
 use sp_runtime::traits::{Block as BlockT, Hash as HashT, HashFor, Header as HeaderT, NumberFor};
 use substrate_test_runtime::genesismap::{additional_storage_with_genesis, GenesisConfig};
@@ -51,27 +51,37 @@ pub mod prelude {
 	};
 	// Client structs
 	pub use super::{
-		Backend, Executor, LightBackend, LightExecutor, LocalExecutor, NativeExecutor, TestClient,
-		TestClientBuilder, WasmExecutionMethod,
+		Backend, ExecutorDispatch, LightBackend, LightExecutor, LocalExecutorDispatch,
+		NativeElseWasmExecutor, TestClient, TestClientBuilder, WasmExecutionMethod,
 	};
 	// Keyring
 	pub use super::{AccountKeyring, Sr25519Keyring};
 }
 
-sc_executor::native_executor_instance! {
-	pub LocalExecutor,
-	substrate_test_runtime::api::dispatch,
-	substrate_test_runtime::native_version,
+/// A unit struct which implements `NativeExecutionDispatch` feeding in the
+/// hard-coded runtime.
+pub struct LocalExecutorDispatch;
+
+impl sc_executor::NativeExecutionDispatch for LocalExecutorDispatch {
+	type ExtendHostFunctions = ();
+
+	fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
+		substrate_test_runtime::api::dispatch(method, data)
+	}
+
+	fn native_version() -> sc_executor::NativeVersion {
+		substrate_test_runtime::native_version()
+	}
 }
 
 /// Test client database backend.
 pub type Backend = substrate_test_client::Backend<substrate_test_runtime::Block>;
 
 /// Test client executor.
-pub type Executor = client::LocalCallExecutor<
+pub type ExecutorDispatch = client::LocalCallExecutor<
 	substrate_test_runtime::Block,
 	Backend,
-	NativeExecutor<LocalExecutor>,
+	NativeElseWasmExecutor<LocalExecutorDispatch>,
 >;
 
 /// Test client light database backend.
@@ -86,7 +96,7 @@ pub type LightExecutor = sc_light::GenesisCallExecutor<
 			sc_client_db::light::LightStorage<substrate_test_runtime::Block>,
 			HashFor<substrate_test_runtime::Block>,
 		>,
-		NativeExecutor<LocalExecutor>,
+		NativeElseWasmExecutor<LocalExecutorDispatch>,
 	>,
 >;
 
@@ -108,11 +118,15 @@ impl GenesisParameters {
 				sr25519::Public::from(Sr25519Keyring::Bob).into(),
 				sr25519::Public::from(Sr25519Keyring::Charlie).into(),
 			],
-			vec![
-				AccountKeyring::Alice.into(),
-				AccountKeyring::Bob.into(),
-				AccountKeyring::Charlie.into(),
-			],
+			(0..16_usize)
+				.into_iter()
+				.map(|i| AccountKeyring::numeric(i).public())
+				.chain(vec![
+					AccountKeyring::Alice.into(),
+					AccountKeyring::Bob.into(),
+					AccountKeyring::Charlie.into(),
+				])
+				.collect(),
 			1000,
 			self.heap_pages_override,
 			self.extra_storage.clone(),
@@ -164,13 +178,13 @@ pub type TestClientBuilder<E, B> = substrate_test_client::TestClientBuilder<
 	GenesisParameters,
 >;
 
-/// Test client type with `LocalExecutor` and generic Backend.
+/// Test client type with `LocalExecutorDispatch` and generic Backend.
 pub type Client<B> = client::Client<
 	B,
 	client::LocalCallExecutor<
 		substrate_test_runtime::Block,
 		B,
-		sc_executor::NativeExecutor<LocalExecutor>,
+		sc_executor::NativeElseWasmExecutor<LocalExecutorDispatch>,
 	>,
 	substrate_test_runtime::Block,
 	substrate_test_runtime::RuntimeApi,
@@ -185,7 +199,7 @@ pub trait DefaultTestClientBuilderExt: Sized {
 	fn new() -> Self;
 }
 
-impl DefaultTestClientBuilderExt for TestClientBuilder<Executor, Backend> {
+impl DefaultTestClientBuilderExt for TestClientBuilder<ExecutorDispatch, Backend> {
 	fn new() -> Self {
 		Self::with_default_backend()
 	}
@@ -267,7 +281,7 @@ impl<B> TestClientBuilderExt<B>
 		client::LocalCallExecutor<
 			substrate_test_runtime::Block,
 			B,
-			sc_executor::NativeExecutor<LocalExecutor>,
+			sc_executor::NativeElseWasmExecutor<LocalExecutorDispatch>,
 		>,
 		B,
 	> where
@@ -426,6 +440,6 @@ pub fn new_light_fetcher() -> LightFetcher {
 }
 
 /// Create a new native executor.
-pub fn new_native_executor() -> sc_executor::NativeExecutor<LocalExecutor> {
-	sc_executor::NativeExecutor::new(sc_executor::WasmExecutionMethod::Interpreted, None, 8)
+pub fn new_native_executor() -> sc_executor::NativeElseWasmExecutor<LocalExecutorDispatch> {
+	sc_executor::NativeElseWasmExecutor::new(sc_executor::WasmExecutionMethod::Interpreted, None, 8)
 }
