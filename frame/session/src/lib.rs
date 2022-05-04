@@ -813,7 +813,7 @@ impl<T: Config> Pallet<T> {
 	///
 	/// This does not ensure that the reference counter in system is incremented appropriately, it
 	/// must be done by the caller or the keys will be leaked in storage.
-	fn inner_set_keys(
+	pub fn inner_set_keys(
 		who: &T::ValidatorId,
 		keys: T::Keys,
 	) -> Result<Option<T::Keys>, DispatchError> {
