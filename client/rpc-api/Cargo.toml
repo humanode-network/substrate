@@ -19,7 +19,7 @@ jsonrpc-core = "18.0.0"
 jsonrpc-core-client = "18.0.0"
 jsonrpc-derive = "18.0.0"
 jsonrpc-pubsub = "18.0.0"
-log = "0.4.8"
+log = "0.4.17"
 parking_lot = "0.11.1"
 thiserror = "1.0"
 

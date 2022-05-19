@@ -17,7 +17,7 @@ codec = { package = "parity-scale-codec", version = "2.0.0" }
 thiserror = "1.0.30"
 futures = "0.3.16"
 intervalier = "0.4.0"
-log = "0.4.8"
+log = "0.4.17"
 parity-util-mem = { version = "0.10.2", default-features = false, features = ["primitive-types"] }
 parking_lot = "0.11.1"
 prometheus-endpoint = { package = "substrate-prometheus-endpoint", path = "../../utils/prometheus", version = "0.10.0-dev"}
