@@ -6965,9 +6965,9 @@ dependencies = [
 
 [[package]]
 name = "prost"
-version = "0.10.3"
+version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc03e116981ff7d8da8e5c220e374587b98d294af7ba7dd7fda761158f00086f"
+checksum = "71adf41db68aa0daaefc69bb30bcd68ded9b9abaad5d1fbb6304c4fb390e083e"
 dependencies = [
  "bytes",
  "prost-derive 0.10.1",
@@ -7766,7 +7766,7 @@ dependencies = [
  "libp2p",
  "log",
  "parity-scale-codec",
- "prost 0.10.3",
+ "prost 0.10.4",
  "prost-build",
  "quickcheck",
  "rand 0.7.3",
@@ -8418,7 +8418,7 @@ dependencies = [
  "parity-scale-codec",
  "parking_lot 0.12.0",
  "pin-project 1.0.10",
- "prost 0.10.3",
+ "prost 0.10.4",
  "prost-build",
  "rand 0.7.3",
  "sc-block-builder",
@@ -8489,7 +8489,7 @@ dependencies = [
  "libp2p",
  "log",
  "parity-scale-codec",
- "prost 0.10.3",
+ "prost 0.10.4",
  "prost-build",
  "sc-client-api",
  "sc-network-common",
@@ -8512,7 +8512,7 @@ dependencies = [
  "log",
  "lru",
  "parity-scale-codec",
- "prost 0.10.3",
+ "prost 0.10.4",
  "prost-build",
  "quickcheck",
  "sc-block-builder",
