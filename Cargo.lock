@@ -3591,7 +3591,7 @@ dependencies = [
  "libp2p-request-response",
  "libp2p-swarm",
  "log",
- "prost 0.10.3",
+ "prost 0.10.4",
  "prost-build 0.10.4",
  "rand 0.8.5",
 ]
@@ -3618,7 +3618,7 @@ dependencies = [
  "multistream-select",
  "parking_lot 0.12.1",
  "pin-project",
- "prost 0.10.3",
+ "prost 0.10.4",
  "prost-build 0.10.4",
  "rand 0.8.5",
  "ring",
@@ -3669,7 +3669,7 @@ dependencies = [
  "libp2p-core",
  "libp2p-swarm",
  "log",
- "prost 0.10.3",
+ "prost 0.10.4",
  "prost-build 0.10.4",
  "rand 0.7.3",
  "smallvec",
@@ -3693,7 +3693,7 @@ dependencies = [
  "libp2p-swarm",
  "log",
  "prometheus-client",
- "prost 0.10.3",
+ "prost 0.10.4",
  "prost-build 0.10.4",
  "rand 0.7.3",
  "regex",
@@ -3716,7 +3716,7 @@ dependencies = [
  "libp2p-swarm",
  "log",
  "lru",
- "prost 0.10.3",
+ "prost 0.10.4",
  "prost-build 0.10.4",
  "prost-codec",
  "smallvec",
@@ -3741,7 +3741,7 @@ dependencies = [
  "libp2p-core",
  "libp2p-swarm",
  "log",
- "prost 0.10.3",
+ "prost 0.10.4",
  "prost-build 0.10.4",
  "rand 0.7.3",
  "sha2 0.10.2",
@@ -3819,7 +3819,7 @@ dependencies = [
  "lazy_static",
  "libp2p-core",
  "log",
- "prost 0.10.3",
+ "prost 0.10.4",
  "prost-build 0.10.4",
  "rand 0.8.5",
  "sha2 0.10.2",
@@ -3856,7 +3856,7 @@ dependencies = [
  "futures",
  "libp2p-core",
  "log",
- "prost 0.10.3",
+ "prost 0.10.4",
  "prost-build 0.10.4",
  "unsigned-varint",
  "void",
@@ -3892,7 +3892,7 @@ dependencies = [
  "libp2p-swarm",
  "log",
  "pin-project",
- "prost 0.10.3",
+ "prost 0.10.4",
  "prost-build 0.10.4",
  "prost-codec",
  "rand 0.8.5",
@@ -3916,7 +3916,7 @@ dependencies = [
  "libp2p-core",
  "libp2p-swarm",
  "log",
- "prost 0.10.3",
+ "prost 0.10.4",
  "prost-build 0.10.4",
  "rand 0.8.5",
  "sha2 0.10.2",
@@ -7056,9 +7056,9 @@ dependencies = [
 
 [[package]]
 name = "prost"
-version = "0.10.3"
+version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc03e116981ff7d8da8e5c220e374587b98d294af7ba7dd7fda761158f00086f"
+checksum = "71adf41db68aa0daaefc69bb30bcd68ded9b9abaad5d1fbb6304c4fb390e083e"
 dependencies = [
  "bytes",
  "prost-derive 0.10.1",
@@ -7089,7 +7089,7 @@ dependencies = [
  "log",
  "multimap",
  "petgraph",
- "prost 0.10.3",
+ "prost 0.10.4",
  "prost-types 0.10.1",
  "regex",
  "tempfile",
@@ -7124,7 +7124,7 @@ checksum = "00af1e92c33b4813cc79fda3f2dbf56af5169709be0202df730e9ebc3e4cd007"
 dependencies = [
  "asynchronous-codec",
  "bytes",
- "prost 0.10.3",
+ "prost 0.10.4",
  "thiserror",
  "unsigned-varint",
 ]
@@ -7162,7 +7162,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2d0a014229361011dc8e69c8a1ec6c2e8d0f2af7c91e3ea3f5b2170298461e68"
 dependencies = [
  "bytes",
- "prost 0.10.3",
+ "prost 0.10.4",
 ]
 
 [[package]]
@@ -7781,7 +7781,7 @@ dependencies = [
  "libp2p",
  "log",
  "parity-scale-codec",
- "prost 0.10.3",
+ "prost 0.11.0",
  "prost-build 0.10.4",
  "quickcheck",
  "rand 0.7.3",
@@ -8437,7 +8437,7 @@ dependencies = [
  "parity-scale-codec",
  "parking_lot 0.12.1",
  "pin-project",
- "prost 0.10.3",
+ "prost 0.11.0",
  "rand 0.7.3",
  "sc-block-builder",
  "sc-client-api",
@@ -8543,7 +8543,7 @@ dependencies = [
  "libp2p",
  "log",
  "parity-scale-codec",
- "prost 0.10.3",
+ "prost 0.11.0",
  "prost-build 0.10.4",
  "sc-client-api",
  "sc-network-common",
@@ -8565,7 +8565,7 @@ dependencies = [
  "log",
  "lru",
  "parity-scale-codec",
- "prost 0.10.3",
+ "prost 0.11.0",
  "prost-build 0.10.4",
  "quickcheck",
  "sc-block-builder",
