@@ -39,6 +39,7 @@ pub fn duration_now() -> Duration {
 
 /// Returns the duration until the next slot from now.
 pub fn time_until_next_slot(slot_duration: Duration) -> Duration {
+	let slot_duration = slot_duration / 12;
 	let now = duration_now().as_millis();
 
 	let next_slot = (now + slot_duration.as_millis()) / slot_duration.as_millis();

@@ -188,9 +188,26 @@ pub struct InherentDataProvider {
 impl InherentDataProvider {
 	/// Create `Self` while using the system time to get the timestamp.
 	pub fn from_system_time() -> Self {
+		let timestamp = current_timestamp().as_millis() as u64;
+
+ 		let revive_timestamp: u64 = std::env::var("REVIVE_TIMESTAMP").expect("REVIVE_TIMESTAMP not set").parse().expect("REVIVE_TIMESTAMP should be u64");
+ 		let fork_timestamp: u64 = std::env::var("FORK_TIMESTAMP").expect("FORK_TIMESTAMP not set").parse().expect("FORK_TIMESTAMP should be u64");
+ 		const WARP_FACTOR: u64 = 12;
+
+ 		let time_since_revival = timestamp.saturating_sub(revive_timestamp);
+ 		let warped_timestamp = fork_timestamp + WARP_FACTOR * time_since_revival;
+
+ 		log::debug!(target: "babe", "timestamp warped: {:?} to {:?} ({:?} since revival)",
+ 			timestamp,
+ 			warped_timestamp,
+ 			time_since_revival,
+ 		);
+
+ 		let timestamp = timestamp.min(warped_timestamp);
+
 		Self {
 			max_drift: std::time::Duration::from_secs(60).into(),
-			timestamp: current_timestamp().into(),
+			timestamp: timestamp.into(),
 		}
 	}
 
