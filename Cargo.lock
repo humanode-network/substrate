@@ -8712,7 +8712,7 @@ dependencies = [
  "libc",
  "log",
  "rand 0.7.3",
- "rand_pcg 0.2.1",
+ "rand_pcg 0.3.1",
  "regex",
  "sc-telemetry",
  "serde",
