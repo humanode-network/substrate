@@ -42,7 +42,7 @@ pub(crate) fn fields_access(
 ) -> impl Iterator<Item = proc_macro2::TokenStream> {
 	fields.enumerate().map(|(ix, field)| {
 		field.ident.map(|i| quote!( #i )).unwrap_or_else(|| {
-			let f_ix: syn::Index = syn::Index { index: ix as u32, span: Span::call_site() };
+			let f_ix: syn::Index = syn::Index { index: ix.try_into().expect("index should be u32"), span: Span::call_site() };
 			quote!( #f_ix )
 		})
 	})

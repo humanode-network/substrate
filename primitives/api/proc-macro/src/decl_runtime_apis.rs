@@ -222,7 +222,7 @@ fn generate_runtime_decls(decls: &[ItemTrait]) -> Result<TokenStream> {
 		let mod_name = generate_runtime_mod_name_for_trait(&decl.ident);
 		let found_attributes = remove_supported_attributes(&mut decl.attrs);
 		let api_version =
-			get_api_version(&found_attributes).map(|v| generate_runtime_api_version(v as u32))?;
+			get_api_version(&found_attributes).map(|v| generate_runtime_api_version(v.try_into().expect("runtime api version should be u32")))?;
 		let id = generate_runtime_api_id(&decl.ident.to_string());
 
 		let trait_api_version = get_api_version(&found_attributes)?;
@@ -571,7 +571,7 @@ fn generate_runtime_info_impl(trait_: &ItemTrait, version: u64) -> TokenStream {
 	let trait_name = &trait_.ident;
 	let crate_ = generate_crate_access(HIDDEN_INCLUDES_ID);
 	let id = generate_runtime_api_id(&trait_name.to_string());
-	let version = generate_runtime_api_version(version as u32);
+	let version = generate_runtime_api_version(version.try_into().expect("runtime api version should be u32"));
 
 	let impl_generics = trait_.generics.type_params().map(|t| {
 		let ident = &t.ident;

@@ -35,7 +35,7 @@ pub fn derive_impl(input: DeriveInput) -> Result<TokenStream> {
 	let enum_fields = get_enum_field_idents(&input.data)?
 		.enumerate()
 		.map(|(i, v)| {
-			let i = i as u8;
+			let i: u8 = i.try_into().expect("index should be u32");
 
 			v.map(|v| (quote!(#i => Ok(#ident::#v)), quote!(#ident::#v => #i)))
 		})

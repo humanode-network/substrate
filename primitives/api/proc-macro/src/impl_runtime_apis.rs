@@ -578,7 +578,7 @@ fn generate_runtime_api_versions(impls: &[ItemImpl]) -> Result<TokenStream> {
 	let c = generate_crate_access(HIDDEN_INCLUDES_ID);
 
 	for impl_ in impls {
-		let api_ver = extract_api_version(&impl_.attrs, impl_.span())?.map(|a| a as u32);
+		let api_ver = extract_api_version(&impl_.attrs, impl_.span())?.map(|a| u32::try_from(a).expect("api version should be u32"));
 
 		let mut path = extend_with_runtime_decl_path(
 			extract_impl_trait(impl_, RequireQualifiedTraitPath::Yes)?.clone(),

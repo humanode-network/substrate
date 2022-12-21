@@ -40,6 +40,7 @@ pub fn gcd(a: u128, b: u128) -> u128 {
 }
 
 /// split a u128 into two u64 limbs
+#[allow(clippy::cast_possible_truncation)]
 pub fn split(a: u128) -> (u64, u64) {
 	let al = a as u64;
 	let ah = (a >> 64) as u64;

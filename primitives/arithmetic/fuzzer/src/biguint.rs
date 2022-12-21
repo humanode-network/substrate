@@ -30,6 +30,7 @@
 use honggfuzz::fuzz;
 use sp_arithmetic::biguint::{BigUint, Single};
 
+#[allow(clippy::cast_possible_truncation)]
 fn main() {
 	loop {
 		fuzz!(|data: (Vec<Single>, Vec<Single>, bool)| {

@@ -39,6 +39,7 @@ static_assertions::const_assert!(
 );
 
 /// Splits a [`Double`] limb number into a tuple of two [`Single`] limb numbers.
+#[allow(clippy::cast_possible_truncation)]
 pub fn split(a: Double) -> (Single, Single) {
 	let al = a as Single;
 	let ah = (a >> SHIFT) as Single;
@@ -70,6 +71,7 @@ pub fn add_single(a: Single, b: Single) -> (Single, Single) {
 ///
 /// Division of double by a single limb. Always returns a double limb of quotient and a single
 /// limb of remainder.
+#[allow(clippy::cast_possible_truncation)]
 fn div_single(a: Double, b: Single) -> (Double, Single) {
 	let b: Double = b.into();
 	let q = a / b;
@@ -189,6 +191,7 @@ impl BigUint {
 	/// limbs. The caller may strip the output if desired.
 	///
 	/// Taken from "The Art of Computer Programming" by D.E. Knuth, vol 2, chapter 4.
+	#[allow(clippy::cast_possible_truncation)]
 	pub fn add(self, other: &Self) -> Self {
 		let n = self.len().max(other.len());
 		let mut k: Double = 0;
@@ -213,6 +216,7 @@ impl BigUint {
 	/// If `other` is bigger than `self`, `Err(B - borrow)` is returned.
 	///
 	/// Taken from "The Art of Computer Programming" by D.E. Knuth, vol 2, chapter 4.
+	#[allow(clippy::cast_possible_truncation)]
 	pub fn sub(self, other: &Self) -> Result<Self, Self> {
 		let n = self.len().max(other.len());
 		let mut k = 0;
@@ -257,6 +261,7 @@ impl BigUint {
 	/// limbs. The caller may strip the output if desired.
 	///
 	/// Taken from "The Art of Computer Programming" by D.E. Knuth, vol 2, chapter 4.
+	#[allow(clippy::cast_possible_truncation)]
 	pub fn mul(self, other: &Self) -> Self {
 		let n = self.len();
 		let m = other.len();
@@ -288,6 +293,7 @@ impl BigUint {
 	/// division cannot work due to the divisor (`other`) being just one limb.
 	///
 	/// Invariant: `other` cannot be zero.
+	#[allow(clippy::cast_possible_truncation)]
 	pub fn div_unit(self, mut other: Single) -> Self {
 		other = other.max(1);
 		let n = self.len();
@@ -316,6 +322,7 @@ impl BigUint {
 	/// the above fails, `None` is returned.`
 	///
 	/// Taken from "The Art of Computer Programming" by D.E. Knuth, vol 2, chapter 4.
+	#[allow(clippy::cast_possible_truncation)]
 	pub fn div(self, other: &Self, rem: bool) -> Option<(Self, Self)> {
 		if other.len() <= 1 || other.msb() == 0 || self.msb() == 0 || self.len() <= other.len() {
 			return None

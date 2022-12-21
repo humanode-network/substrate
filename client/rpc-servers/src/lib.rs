@@ -67,6 +67,7 @@ impl WsConfig {
 	// Deconstructs the config to get the finalized inner values.
 	//
 	// `Payload size` or `max subs per connection` bigger than u32::MAX will be truncated.
+	#[allow(clippy::cast_possible_truncation)]
 	fn deconstruct(self) -> (u32, u32, u64, u32) {
 		let max_conns = self.max_connections.unwrap_or(WS_MAX_CONNECTIONS) as u64;
 		let max_payload_in_mb = payload_size_or_default(self.max_payload_in_mb) as u32;
@@ -78,6 +79,7 @@ impl WsConfig {
 }
 
 /// Start HTTP server listening on given address.
+#[allow(clippy::cast_possible_truncation)]
 pub async fn start_http<M: Send + Sync + 'static>(
 	addrs: [SocketAddr; 2],
 	cors: Option<&Vec<String>>,
