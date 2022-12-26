@@ -156,7 +156,7 @@ pub fn expand_error(def: &mut Def) -> proc_macro2::TokenStream {
 					<T as #frame_system::Config>::PalletInfo
 					as #frame_support::traits::PalletInfo
 				>::index::<Pallet<#type_use_gen>>()
-					.expect("Every active module has an index in the runtime; qed").try_into().expect("Index should be u8");
+					.expect("Every active module has an index in the runtime; qed").try_into().expect("Index should fit into u8");
 				let mut encoded = err.encode();
 				encoded.resize(#frame_support::MAX_MODULE_ERROR_ENCODED_SIZE, 0);
 
