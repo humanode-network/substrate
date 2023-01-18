@@ -17,7 +17,7 @@ proc-macro = true
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3.0.0", features = [ "derive" ] }
-proc-macro2 = "1.0.37"
+proc-macro2 = "1.0.50"
 quote = "1.0.10"
 syn = { version = "1.0.98", features = ["full", "fold", "extra-traits", "visit"] }
 
