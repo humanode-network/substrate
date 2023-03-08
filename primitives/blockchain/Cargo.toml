@@ -19,7 +19,7 @@ futures = "0.3.21"
 log = "0.4.17"
 lru = "0.8.1"
 parking_lot = "0.12.1"
-thiserror = "1.0.30"
+thiserror = "1.0.39"
 sp-api = { version = "4.0.0-dev", path = "../api" }
 sp-consensus = { version = "0.10.0-dev", path = "../consensus/common" }
 sp-database = { version = "4.0.0-dev", path = "../database" }

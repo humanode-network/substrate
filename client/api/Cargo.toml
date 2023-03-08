@@ -37,6 +37,6 @@ sp-state-machine = { version = "0.13.0", path = "../../primitives/state-machine"
 sp-storage = { version = "7.0.0", path = "../../primitives/storage" }
 
 [dev-dependencies]
-thiserror = "1.0.30"
+thiserror = "1.0.39"
 sp-test-primitives = { version = "2.0.0", path = "../../primitives/test-primitives" }
 substrate-test-runtime = { version = "2.0.0", path = "../../test-utils/runtime" }
