@@ -22,7 +22,7 @@ sc-block-builder = { version = "0.10.0-dev", path = "../../../client/block-build
 codec = { package = "parity-scale-codec", version = "3.6.1" }
 sp-state-machine = { version = "0.28.0", path = "../../state-machine" }
 trybuild = "1.0.74"
-rustversion = "1.0.6"
+rustversion = "1.0.14"
 scale-info = { version = "2.5.0", default-features = false, features = ["derive"] }
 
 [dev-dependencies]
