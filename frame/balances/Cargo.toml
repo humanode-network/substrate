@@ -26,7 +26,7 @@ sp-std = { version = "8.0.0", default-features = false, path = "../../primitives
 pallet-transaction-payment = { version = "4.0.0-dev", path = "../transaction-payment" }
 sp-core = { version = "21.0.0", path = "../../primitives/core" }
 sp-io = { version = "23.0.0", path = "../../primitives/io" }
-paste = "1.0.12"
+paste = "1.0.14"
 
 [features]
 default = [ "std" ]
