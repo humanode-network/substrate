@@ -45,6 +45,9 @@ pub const RPC_MAX_PAYLOAD_DEFAULT: usize = 15 * MEGABYTE;
 /// Default maximum number of connections for WS RPC servers.
 const WS_MAX_CONNECTIONS: usize = 100;
 
+/// Default maximum number of connections for HTTP RPC servers.
+const HTTP_MAX_CONNECTIONS: u32 = 16000;
+
 /// Default maximum number subscriptions per connection for WS RPC servers.
 const WS_MAX_SUBS_PER_CONN: usize = 1024;
 
@@ -102,6 +105,7 @@ pub async fn start_http<M: Send + Sync + 'static>(
 	let builder = ServerBuilder::new()
 		.max_request_body_size(max_payload_in)
 		.max_response_body_size(max_payload_out)
+		.max_connections(HTTP_MAX_CONNECTIONS)
 		.set_host_filtering(host_filter)
 		.set_middleware(middleware)
 		.custom_tokio_runtime(rt)
