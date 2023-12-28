@@ -20,7 +20,7 @@
 use codec::{Decode, Encode, FullCodec, MaxEncodedLen};
 use sp_arithmetic::traits::{AtLeast32BitUnsigned, Zero};
 use sp_core::RuntimeDebug;
-use sp_runtime::{traits::Convert, ArithmeticError, DispatchError, TokenError};
+use sp_runtime::{traits::{Convert, MaybeSerializeDeserialize}, ArithmeticError, DispatchError, TokenError};
 use sp_std::fmt::Debug;
 
 /// The origin of funds to be used for a deposit operation.
@@ -228,7 +228,7 @@ impl<T: FullCodec + Copy + Eq + PartialEq + Debug + scale_info::TypeInfo + MaxEn
 
 /// Simple amalgamation trait to collect together properties for a Balance under one roof.
 pub trait Balance:
-	AtLeast32BitUnsigned + FullCodec + Copy + Default + Debug + scale_info::TypeInfo + MaxEncodedLen
+	AtLeast32BitUnsigned + FullCodec + Copy + Default + Debug + scale_info::TypeInfo + MaxEncodedLen + MaybeSerializeDeserialize
 {
 }
 impl<
@@ -238,7 +238,8 @@ impl<
 			+ Default
 			+ Debug
 			+ scale_info::TypeInfo
-			+ MaxEncodedLen,
+			+ MaxEncodedLen
+			+ MaybeSerializeDeserialize,
 	> Balance for T
 {
 }
