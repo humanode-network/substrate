@@ -61,8 +61,8 @@ use libp2p::{
 	kad::record::Key as KademliaKey,
 	multiaddr,
 	swarm::{
-		ConnectionError, ConnectionId, DialError, Executor, ListenError, NetworkBehaviour, Swarm,
-		SwarmBuilder, SwarmEvent, THandlerErr,
+		Config as SwarmConfig, ConnectionError, ConnectionId, DialError, Executor, ListenError,
+ 		NetworkBehaviour, Swarm, SwarmEvent, THandlerErr,
 	},
 	Multiaddr, PeerId,
 };
@@ -375,29 +375,26 @@ where
 				}
 			};
 
-			let builder = {
+			let swarm = {
 				struct SpawnImpl<F>(F);
 				impl<F: Fn(Pin<Box<dyn Future<Output = ()> + Send>>)> Executor for SpawnImpl<F> {
 					fn exec(&self, f: Pin<Box<dyn Future<Output = ()> + Send>>) {
 						(self.0)(f)
 					}
 				}
-				SwarmBuilder::with_executor(
-					transport,
-					behaviour,
-					local_peer_id,
-					SpawnImpl(params.executor),
-				)
-			};
-			let builder = builder
-				.substream_upgrade_protocol_override(upgrade::Version::V1Lazy)
-				.notify_handler_buffer_size(NonZeroUsize::new(32).expect("32 != 0; qed"))
-				// NOTE: 24 is somewhat arbitrary and should be tuned in the future if necessary.
-				// See <https://github.com/paritytech/substrate/pull/6080>
-				.per_connection_event_buffer_size(24)
-				.max_negotiating_inbound_streams(2048);
 
-			(builder.build(), bandwidth)
+				let config = SwarmConfig::with_executor(SpawnImpl(params.executor))
+					.with_substream_upgrade_protocol_override(upgrade::Version::V1)
+					.with_notify_handler_buffer_size(NonZeroUsize::new(32).expect("32 != 0; qed"))
+					// NOTE: 24 is somewhat arbitrary and should be tuned in the future if necessary.
+					// See <https://github.com/paritytech/substrate/pull/6080>
+					.with_per_connection_event_buffer_size(24)
+					.with_max_negotiating_inbound_streams(2048);
+
+ 				Swarm::new(transport, behaviour, local_peer_id, config)
+			};
+
+			(swarm, bandwidth)
 		};
 
 		// Initialize the metrics.
