@@ -27,64 +27,64 @@ use sp_std::{
 };
 
 pub use schnorrkel::{
-	vrf::{VRF_OUTPUT_LENGTH, VRF_PROOF_LENGTH},
+	vrf::{VRF_PREOUT_LENGTH, VRF_PROOF_LENGTH},
 	PublicKey, SignatureError,
 };
 
 /// The length of the Randomness.
-pub const RANDOMNESS_LENGTH: usize = VRF_OUTPUT_LENGTH;
+pub const RANDOMNESS_LENGTH: usize = VRF_PREOUT_LENGTH;
 
 /// VRF output type available for `std` environment, suitable for schnorrkel operations.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct VRFOutput(pub schnorrkel::vrf::VRFOutput);
+pub struct VRFPreOut(pub schnorrkel::vrf::VRFPreOut);
 
-impl Deref for VRFOutput {
-	type Target = schnorrkel::vrf::VRFOutput;
+impl Deref for VRFPreOut {
+	type Target = schnorrkel::vrf::VRFPreOut;
 	fn deref(&self) -> &Self::Target {
 		&self.0
 	}
 }
 
-impl DerefMut for VRFOutput {
+impl DerefMut for VRFPreOut {
 	fn deref_mut(&mut self) -> &mut Self::Target {
 		&mut self.0
 	}
 }
 
-impl Encode for VRFOutput {
+impl Encode for VRFPreOut {
 	fn encode(&self) -> Vec<u8> {
 		self.0.as_bytes().encode()
 	}
 }
 
-impl EncodeLike for VRFOutput {}
+impl EncodeLike for VRFPreOut {}
 
-impl Decode for VRFOutput {
+impl Decode for VRFPreOut {
 	fn decode<R: codec::Input>(i: &mut R) -> Result<Self, codec::Error> {
-		let decoded = <[u8; VRF_OUTPUT_LENGTH]>::decode(i)?;
-		Ok(Self(schnorrkel::vrf::VRFOutput::from_bytes(&decoded).map_err(convert_error)?))
+		let decoded = <[u8; VRF_PREOUT_LENGTH]>::decode(i)?;
+		Ok(Self(schnorrkel::vrf::VRFPreOut::from_bytes(&decoded).map_err(convert_error)?))
 	}
 }
 
-impl MaxEncodedLen for VRFOutput {
+impl MaxEncodedLen for VRFPreOut {
 	fn max_encoded_len() -> usize {
-		<[u8; VRF_OUTPUT_LENGTH]>::max_encoded_len()
+		<[u8; VRF_PREOUT_LENGTH]>::max_encoded_len()
 	}
 }
 
-impl TypeInfo for VRFOutput {
-	type Identity = [u8; VRF_OUTPUT_LENGTH];
+impl TypeInfo for VRFPreOut {
+	type Identity = [u8; VRF_PREOUT_LENGTH];
 
 	fn type_info() -> scale_info::Type {
 		Self::Identity::type_info()
 	}
 }
 
-impl TryFrom<[u8; VRF_OUTPUT_LENGTH]> for VRFOutput {
+impl TryFrom<[u8; VRF_PREOUT_LENGTH]> for VRFPreOut {
 	type Error = SignatureError;
 
-	fn try_from(raw: [u8; VRF_OUTPUT_LENGTH]) -> Result<Self, Self::Error> {
-		schnorrkel::vrf::VRFOutput::from_bytes(&raw).map(VRFOutput)
+	fn try_from(raw: [u8; VRF_PREOUT_LENGTH]) -> Result<Self, Self::Error> {
+		schnorrkel::vrf::VRFPreOut::from_bytes(&raw).map(VRFPreOut)
 	}
 }
 
@@ -162,6 +162,7 @@ fn convert_error(e: SignatureError) -> codec::Error {
 		PointDecompressionError => "Signature error: `PointDecompressionError`".into(),
 		ScalarFormatError => "Signature error: `ScalarFormatError`".into(),
 		NotMarkedSchnorrkel => "Signature error: `NotMarkedSchnorrkel`".into(),
+		InvalidKey => "Signature error: `InvalidKey`".into(),
 		BytesLengthError { .. } => "Signature error: `BytesLengthError`".into(),
 		MuSigAbsent { musig_stage: Commitment } =>
 			"Signature error: `MuSigAbsent` at stage `Commitment`".into(),
@@ -184,5 +185,5 @@ fn convert_error(e: SignatureError) -> codec::Error {
 	}
 }
 
-/// Schnorrkel randomness value. Same size as `VRFOutput`.
+/// Schnorrkel randomness value. Same size as `VRFPreOut`.
 pub type Randomness = [u8; RANDOMNESS_LENGTH];

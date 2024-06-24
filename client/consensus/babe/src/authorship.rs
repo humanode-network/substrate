@@ -27,7 +27,7 @@ use sp_consensus_babe::{
 	digests::{PreDigest, PrimaryPreDigest, SecondaryPlainPreDigest, SecondaryVRFPreDigest},
 	make_transcript, make_transcript_data, AuthorityId, BabeAuthorityWeight, Slot, BABE_VRF_PREFIX,
 };
-use sp_consensus_vrf::schnorrkel::{VRFOutput, VRFProof};
+use sp_consensus_vrf::schnorrkel::{VRFPreOut, VRFProof};
 use sp_core::{blake2_256, crypto::ByteArray, U256};
 use sp_keystore::{SyncCryptoStore, SyncCryptoStorePtr};
 
@@ -162,7 +162,7 @@ fn claim_secondary_slot(
 				if let Ok(Some(signature)) = result {
 					Some(PreDigest::SecondaryVRF(SecondaryVRFPreDigest {
 						slot,
-						vrf_output: VRFOutput(signature.output),
+						vrf_output: VRFPreOut(signature.output),
 						vrf_proof: VRFProof(signature.proof),
 						authority_index: *authority_index as u32,
 					}))
@@ -271,7 +271,7 @@ fn claim_primary_slot(
 			if check_primary_threshold(&inout, threshold) {
 				let pre_digest = PreDigest::Primary(PrimaryPreDigest {
 					slot,
-					vrf_output: VRFOutput(signature.output),
+					vrf_output: VRFPreOut(signature.output),
 					vrf_proof: VRFProof(signature.proof),
 					authority_index: *authority_index as u32,
 				});
