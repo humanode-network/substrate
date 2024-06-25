@@ -28,8 +28,9 @@ pub use crate::{
 	types::ProtocolName,
 };
 
+pub use libp2p::{identity::Keypair, multiaddr, Multiaddr, PeerId};
+
 use codec::Encode;
-use libp2p::{identity::Keypair, multiaddr, Multiaddr, PeerId};
 use prometheus_endpoint::Registry;
 pub use sc_network_common::{role::Role, sync::warp::WarpSyncProvider, ExHashT};
 use zeroize::Zeroize;
@@ -99,8 +100,7 @@ pub fn parse_str_addr(addr_str: &str) -> Result<(PeerId, Multiaddr), ParseErr> {
 /// Splits a Multiaddress into a Multiaddress and PeerId.
 pub fn parse_addr(mut addr: Multiaddr) -> Result<(PeerId, Multiaddr), ParseErr> {
 	let who = match addr.pop() {
-		Some(multiaddr::Protocol::P2p(key)) =>
-			PeerId::from_multihash(key).map_err(|_| ParseErr::InvalidPeerId)?,
+		Some(multiaddr::Protocol::P2p(peer_id)) => peer_id,
 		_ => return Err(ParseErr::PeerIdMissing),
 	};
 
@@ -133,7 +133,7 @@ pub struct MultiaddrWithPeerId {
 impl MultiaddrWithPeerId {
 	/// Concatenates the multiaddress and peer ID into one multiaddress containing both.
 	pub fn concat(&self) -> Multiaddr {
-		let proto = multiaddr::Protocol::P2p(From::from(self.peer_id));
+		let proto = multiaddr::Protocol::P2p(self.peer_id);
 		self.multiaddr.clone().with(proto)
 	}
 }
@@ -171,8 +171,6 @@ impl TryFrom<String> for MultiaddrWithPeerId {
 pub enum ParseErr {
 	/// Error while parsing the multiaddress.
 	MultiaddrParse(multiaddr::Error),
-	/// Multihash of the peer ID is invalid.
-	InvalidPeerId,
 	/// The peer ID is missing from the address.
 	PeerIdMissing,
 }
@@ -181,7 +179,6 @@ impl fmt::Display for ParseErr {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::MultiaddrParse(err) => write!(f, "{}", err),
-			Self::InvalidPeerId => write!(f, "Peer id at the end of the address is invalid"),
 			Self::PeerIdMissing => write!(f, "Peer id is missing from the address"),
 		}
 	}
@@ -191,7 +188,6 @@ impl std::error::Error for ParseErr {
 	fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
 		match self {
 			Self::MultiaddrParse(err) => Some(err),
-			Self::InvalidPeerId => None,
 			Self::PeerIdMissing => None,
 		}
 	}
@@ -360,7 +356,7 @@ impl NodeKeyConfig {
 		match self {
 			Ed25519(Secret::New) => Ok(Keypair::generate_ed25519()),
 
-			Ed25519(Secret::Input(k)) => Ok(Keypair::Ed25519(k.into())),
+			Ed25519(Secret::Input(k)) => Ok(ed25519::Keypair::from(k).into()),
 
 			Ed25519(Secret::File(f)) => get_secret(
 				f,
@@ -371,14 +367,14 @@ impl NodeKeyConfig {
 						None
 					}
 				}) {
-					Some(s) => ed25519::SecretKey::from_bytes(s),
-					_ => ed25519::SecretKey::from_bytes(&mut b),
+					Some(s) => ed25519::SecretKey::try_from_bytes(s),
+					_ => ed25519::SecretKey::try_from_bytes(&mut b),
 				},
 				ed25519::SecretKey::generate,
 				|b| b.as_ref().to_vec(),
 			)
 			.map(ed25519::Keypair::from)
-			.map(Keypair::Ed25519),
+			.map(Keypair::from),
 		}
 	}
 }
@@ -727,9 +723,14 @@ mod tests {
 		tempfile::Builder::new().prefix(prefix).tempdir().unwrap()
 	}
 
-	fn secret_bytes(kp: &Keypair) -> Vec<u8> {
-		let Keypair::Ed25519(p) = kp;
-		p.secret().as_ref().iter().cloned().collect()
+	fn secret_bytes(kp: Keypair) -> Vec<u8> {
+		kp.try_into_ed25519()
+			.expect("ed25519 keypair")
+			.secret()
+			.as_ref()
+			.iter()
+			.cloned()
+			.collect()
 	}
 
 	#[test]
@@ -739,7 +740,7 @@ mod tests {
 		let file = tmp.path().join("x").to_path_buf();
 		let kp1 = NodeKeyConfig::Ed25519(Secret::File(file.clone())).into_keypair().unwrap();
 		let kp2 = NodeKeyConfig::Ed25519(Secret::File(file.clone())).into_keypair().unwrap();
-		assert!(file.is_file() && secret_bytes(&kp1) == secret_bytes(&kp2))
+		assert!(file.is_file() && secret_bytes(kp1) == secret_bytes(kp2))
 	}
 
 	#[test]
@@ -747,13 +748,13 @@ mod tests {
 		let sk = ed25519::SecretKey::generate();
 		let kp1 = NodeKeyConfig::Ed25519(Secret::Input(sk.clone())).into_keypair().unwrap();
 		let kp2 = NodeKeyConfig::Ed25519(Secret::Input(sk)).into_keypair().unwrap();
-		assert!(secret_bytes(&kp1) == secret_bytes(&kp2));
+		assert!(secret_bytes(kp1) == secret_bytes(kp2));
 	}
 
 	#[test]
 	fn test_secret_new() {
 		let kp1 = NodeKeyConfig::Ed25519(Secret::New).into_keypair().unwrap();
 		let kp2 = NodeKeyConfig::Ed25519(Secret::New).into_keypair().unwrap();
-		assert!(secret_bytes(&kp1) != secret_bytes(&kp2));
+		assert!(secret_bytes(kp1) != secret_bytes(kp2));
 	}
 }

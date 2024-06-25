@@ -37,7 +37,7 @@ use sp_consensus_babe::{
 	AuthorityId, AuthorityPair, Slot,
 };
 use sp_consensus_slots::SlotDuration;
-use sp_consensus_vrf::schnorrkel::VRFOutput;
+use sp_consensus_vrf::schnorrkel::VRFPreOut;
 use sp_core::crypto::Pair;
 use sp_keyring::Sr25519Keyring;
 use sp_keystore::{
@@ -641,7 +641,7 @@ fn claim_vrf_check() {
 	let sign = SyncCryptoStore::sr25519_vrf_sign(&*keystore, AuthorityId::ID, &public, transcript)
 		.unwrap()
 		.unwrap();
-	assert_eq!(pre_digest.vrf_output, VRFOutput(sign.output));
+	assert_eq!(pre_digest.vrf_output, VRFPreOut(sign.output));
 
 	// We expect a SecondaryVRF claim for slot 1
 	let pre_digest = match claim_slot(1.into(), &epoch, &keystore).unwrap().0 {
@@ -652,7 +652,7 @@ fn claim_vrf_check() {
 	let sign = SyncCryptoStore::sr25519_vrf_sign(&*keystore, AuthorityId::ID, &public, transcript)
 		.unwrap()
 		.unwrap();
-	assert_eq!(pre_digest.vrf_output, VRFOutput(sign.output));
+	assert_eq!(pre_digest.vrf_output, VRFPreOut(sign.output));
 
 	// Check that correct epoch index has been used if epochs are skipped (primary VRF)
 	let slot = Slot::from(103);
@@ -666,7 +666,7 @@ fn claim_vrf_check() {
 		.unwrap()
 		.unwrap();
 	assert_eq!(fixed_epoch.epoch_index, 11);
-	assert_eq!(claim.vrf_output, VRFOutput(sign.output));
+	assert_eq!(claim.vrf_output, VRFPreOut(sign.output));
 
 	// Check that correct epoch index has been used if epochs are skipped (secondary VRF)
 	let slot = Slot::from(100);
@@ -680,7 +680,7 @@ fn claim_vrf_check() {
 		.unwrap()
 		.unwrap();
 	assert_eq!(fixed_epoch.epoch_index, 11);
-	assert_eq!(pre_digest.vrf_output, VRFOutput(sign.output));
+	assert_eq!(pre_digest.vrf_output, VRFPreOut(sign.output));
 }
 
 // Propose and import a new BABE block on top of the given parent.
