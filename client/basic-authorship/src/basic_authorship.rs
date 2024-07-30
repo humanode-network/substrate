@@ -212,6 +212,19 @@ where
 			include_proof_in_block_size_estimation: self.include_proof_in_block_size_estimation,
 		};
 
+		info!("Delay start");
+
+		std::thread::sleep(
+			std::time::Duration::from_secs(
+				std::time::SystemTime::now()
+					.duration_since(std::time::UNIX_EPOCH)
+					.expect("time went backwards")
+					.as_millis() as u64 % 10
+			)
+		);
+
+		info!("Delay end");
+
 		proposer
 	}
 }
