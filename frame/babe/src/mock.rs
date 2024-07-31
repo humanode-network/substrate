@@ -26,7 +26,7 @@ use frame_support::{
 };
 use pallet_session::historical as pallet_session_historical;
 use sp_consensus_babe::{AuthorityId, AuthorityPair, Slot};
-use sp_consensus_vrf::schnorrkel::{VRFPreOut, VRFProof};
+use sp_consensus_vrf::schnorrkel::{VRFOutput, VRFProof};
 use sp_core::{
 	crypto::{IsWrappedBy, KeyTypeId, Pair},
 	H256, U256,
@@ -279,7 +279,7 @@ pub fn start_era(era_index: EraIndex) {
 pub fn make_primary_pre_digest(
 	authority_index: sp_consensus_babe::AuthorityIndex,
 	slot: sp_consensus_babe::Slot,
-	vrf_output: VRFPreOut,
+	vrf_output: VRFOutput,
 	vrf_proof: VRFProof,
 ) -> Digest {
 	let digest_data = sp_consensus_babe::digests::PreDigest::Primary(
@@ -308,7 +308,7 @@ pub fn make_secondary_plain_pre_digest(
 pub fn make_secondary_vrf_pre_digest(
 	authority_index: sp_consensus_babe::AuthorityIndex,
 	slot: sp_consensus_babe::Slot,
-	vrf_output: VRFPreOut,
+	vrf_output: VRFOutput,
 	vrf_proof: VRFProof,
 ) -> Digest {
 	let digest_data = sp_consensus_babe::digests::PreDigest::SecondaryVRF(
@@ -326,13 +326,13 @@ pub fn make_secondary_vrf_pre_digest(
 pub fn make_vrf_output(
 	slot: Slot,
 	pair: &sp_consensus_babe::AuthorityPair,
-) -> (VRFPreOut, VRFProof, [u8; 32]) {
+) -> (VRFOutput, VRFProof, [u8; 32]) {
 	let pair = sp_core::sr25519::Pair::from_ref(pair).as_ref();
 	let transcript = sp_consensus_babe::make_transcript(&Babe::randomness(), slot, 0);
 	let vrf_inout = pair.vrf_sign(transcript);
 	let vrf_randomness: sp_consensus_vrf::schnorrkel::Randomness =
 		vrf_inout.0.make_bytes::<[u8; 32]>(&sp_consensus_babe::BABE_VRF_INOUT_CONTEXT);
-	let vrf_output = VRFPreOut(vrf_inout.0.to_preout());
+	let vrf_output = VRFOutput(vrf_inout.0.to_output());
 	let vrf_proof = VRFProof(vrf_inout.1);
 
 	(vrf_output, vrf_proof, vrf_randomness)

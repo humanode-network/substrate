@@ -783,11 +783,13 @@ pub trait Crypto {
 		{
 			use ed25519_dalek::Verifier;
 
-			let Ok(public_key) = ed25519_dalek::VerifyingKey::from_bytes(&pub_key.0) else {
+			let Ok(public_key) = ed25519_dalek::PublicKey::from_bytes(&pub_key.0) else {
 				return false
 			};
 
-			let sig = ed25519_dalek::Signature::from_bytes(&sig.0);
+			let Ok(sig) = ed25519_dalek::Signature::from_bytes(&sig.0) else {
+				return false
+			};
 
 			public_key.verify(msg, &sig).is_ok()
 		} else {

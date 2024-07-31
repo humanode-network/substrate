@@ -334,7 +334,7 @@ impl SyncCryptoStore for LocalKeystore {
 
 		if let Some(pair) = pair {
 			let (inout, proof, _) = pair.as_ref().vrf_sign(transcript);
-			Ok(Some(VRFSignature { output: inout.to_preout(), proof }))
+			Ok(Some(VRFSignature { output: inout.to_output(), proof }))
 		} else {
 			Ok(None)
 		}
