@@ -22,7 +22,7 @@
 use crate::types::ProtocolName;
 
 use bytes::Bytes;
-use libp2p::{PeerId, kad::record::Key};
+use libp2p::{core::PeerId, kad::record::Key};
 
 use sc_network_common::role::ObservedRole;
 

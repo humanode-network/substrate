@@ -177,7 +177,7 @@ pub trait CryptoStore: Send + Sync {
 	/// is, in turn, used for signing the provided transcript.
 	///
 	/// Returns a result containing the signature data.
-	/// Namely, VRFPreOut and VRFProof which are returned
+	/// Namely, VRFOutput and VRFProof which are returned
 	/// inside the `VRFSignature` container struct.
 	///
 	/// This function will return `None` if the given `key_type` and `public` combination
@@ -352,7 +352,7 @@ pub trait SyncCryptoStore: CryptoStore + Send + Sync {
 	/// is, in turn, used for signing the provided transcript.
 	///
 	/// Returns a result containing the signature data.
-	/// Namely, VRFPreOut and VRFProof which are returned
+	/// Namely, VRFOutput and VRFProof which are returned
 	/// inside the `VRFSignature` container struct.
 	///
 	/// This function will return `None` if the given `key_type` and `public` combination

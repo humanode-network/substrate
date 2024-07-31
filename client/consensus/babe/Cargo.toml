@@ -19,12 +19,12 @@ scale-info = { version = "2.1.1", features = ["derive"] }
 codec = { package = "parity-scale-codec", version = "3.2.2", features = ["derive"] }
 futures = "0.3.21"
 log = "0.4.17"
-merlin = "3.0"
+merlin = "2.0"
 num-bigint = "0.4.3"
 num-rational = "0.4.1"
 num-traits = "0.2.8"
 parking_lot = "0.12.1"
-schnorrkel = { version = "0.11.4", features = ["preaudit_deprecated"] }
+schnorrkel = { version = "0.9.1", features = ["preaudit_deprecated"] }
 thiserror = "1.0"
 fork-tree = { version = "3.0.0", path = "../../../utils/fork-tree" }
 prometheus-endpoint = { package = "substrate-prometheus-endpoint", version = "0.10.0-dev", path = "../../../utils/prometheus" }
@@ -56,4 +56,4 @@ sc-network-test = { version = "0.8.0", path = "../../network/test" }
 sp-timestamp = { version = "4.0.0-dev", path = "../../../primitives/timestamp" }
 sp-tracing = { version = "6.0.0", path = "../../../primitives/tracing" }
 substrate-test-runtime-client = { version = "2.0.0", path = "../../../test-utils/runtime/client" }
-tokio = "1.28.0"
+tokio = "1.22.0"
