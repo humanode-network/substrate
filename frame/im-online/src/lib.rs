@@ -385,6 +385,8 @@ pub mod pallet {
 		InvalidKey,
 		/// Duplicated heartbeat.
 		DuplicatedHeartbeat,
+		/// Received heartbeat with exceeded limit of external addresses.
+		HeartbeatWithExceededLimitOfExternalAddresses
 	}
 
 	/// The block number after which it's ok to send heartbeats in the current
@@ -489,6 +491,10 @@ pub mod pallet {
 			let keys = Keys::<T>::get();
 			let public = keys.get(heartbeat.authority_index as usize);
 			if let (false, Some(public)) = (exists, public) {
+				if heartbeat.network_state.external_addresses.len() > T::MaxPeerInHeartbeats {
+					return Err(Error::<T>::HeartbeatWithExceededLimitOfExternalAddresses.into());
+				}
+
 				Self::deposit_event(Event::<T>::HeartbeatReceived { authority_id: public.clone() });
 
 				let network_state_bounded = BoundedOpaqueNetworkState::<
