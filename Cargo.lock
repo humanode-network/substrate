@@ -9041,9 +9041,9 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "0.36.14"
+version = "0.36.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14e4d67015953998ad0eb82887a0eb0129e18a7e2f3b7b0f6c422fddcd503d62"
+checksum = "305efbd14fde4139eb501df5f136994bb520b033fa9fbdce287507dc23b8c7ed"
 dependencies = [
  "bitflags",
  "errno",
@@ -9843,7 +9843,7 @@ dependencies = [
  "log",
  "parity-scale-codec",
  "paste",
- "rustix 0.36.14",
+ "rustix 0.37.19",
  "sc-allocator",
  "sc-executor-common",
  "sc-runtime-test",
@@ -13682,7 +13682,7 @@ dependencies = [
  "directories-next",
  "file-per-thread-logger",
  "log",
- "rustix 0.36.14",
+ "rustix 0.36.17",
  "serde",
  "sha2 0.10.7",
  "toml 0.5.11",
@@ -13778,7 +13778,7 @@ checksum = "6e0554b84c15a27d76281d06838aed94e13a77d7bf604bbbaf548aa20eb93846"
 dependencies = [
  "object",
  "once_cell",
- "rustix 0.36.14",
+ "rustix 0.36.17",
 ]
 
 [[package]]
@@ -13809,7 +13809,7 @@ dependencies = [
  "memoffset 0.8.0",
  "paste",
  "rand 0.8.5",
- "rustix 0.36.14",
+ "rustix 0.36.17",
  "wasmtime-asm-macros",
  "wasmtime-environ",
  "wasmtime-jit-debug",
