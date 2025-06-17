@@ -18,7 +18,7 @@ async-trait = "0.1.57"
 scale-info = { version = "2.5.0", features = ["derive"] }
 codec = { package = "parity-scale-codec", version = "3.6.1", features = ["derive"] }
 futures = "0.3.21"
-log = "0.4.17"
+log = "0.4.27"
 num-bigint = "0.4.3"
 num-rational = "0.4.1"
 num-traits = "0.2.8"

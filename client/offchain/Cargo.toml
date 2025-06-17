@@ -39,7 +39,7 @@ sp-offchain = { version = "4.0.0-dev", path = "../../primitives/offchain" }
 sp-runtime = { version = "24.0.0", path = "../../primitives/runtime" }
 sp-keystore = { version = "0.27.0", path = "../../primitives/keystore" }
 sp-externalities = { version = "0.19.0", path = "../../primitives/externalities" }
-log = "0.4.17"
+log = "0.4.27"
 
 [dev-dependencies]
 lazy_static = "1.4.0"
