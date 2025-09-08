@@ -14,7 +14,7 @@ targets = ["x86_64-unknown-linux-gnu"]
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3.6.1", default-features = false }
 scale-info = { version = "2.5.0", default-features = false, features = ["derive"] }
-log = { version = "0.4.17", default-features = false }
+log = { version = "0.4.28", default-features = false }
 mmr-lib = { package = "ckb-merkle-mountain-range", version = "0.5.2", default-features = false }
 serde = { version = "1.0.163", features = ["derive", "alloc"], default-features = false, optional = true }
 sp-api = { version = "4.0.0-dev", default-features = false, path = "../api" }

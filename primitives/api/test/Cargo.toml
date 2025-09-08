@@ -28,7 +28,7 @@ scale-info = { version = "2.5.0", default-features = false, features = ["derive"
 [dev-dependencies]
 criterion = "0.4.0"
 futures = "0.3.21"
-log = "0.4.17"
+log = "0.4.28"
 sp-core = { version = "21.0.0", path = "../../core" }
 static_assertions = "1.1.0"
 

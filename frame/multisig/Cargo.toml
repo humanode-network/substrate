@@ -23,7 +23,7 @@ sp-runtime = { version = "24.0.0", default-features = false, path = "../../primi
 sp-std = { version = "8.0.0", default-features = false, path = "../../primitives/std" }
 
 # third party
-log = { version = "0.4.17", default-features = false }
+log = { version = "0.4.28", default-features = false }
 
 [dev-dependencies]
 pallet-balances = { version = "4.0.0-dev", path = "../balances" }
